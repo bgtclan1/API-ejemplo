@@ -1,2 +1,5 @@
 fastapi
-uvicorn[standard]
+uvicorn
+SQLAlchemy
+passlib[bcrypt]
+PyJWT
