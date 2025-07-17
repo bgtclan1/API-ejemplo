@@ -19,19 +19,21 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 SECRET_KEY = "S3mi7_Cl4v3_S3cr3t4"       
 ALGORITHM = "HS256"                           
-ACCESS_TOKEN_EXPIRE_MINUTES = 5              
+ACCESS_TOKEN_EXPIRE_MINUTES = 58              
 
 def create_access_token(data: dict, expires_delta: timedelta ) -> str:
     to_encode = data.copy()
     now = datetime.now()
     to_encode.update({"iat": now})
     expire = now + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-    to_encode.update({"exp": expire})
+    #to_encode.update({"exp": expire})
+    print(expire)
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 def decode_token(token: str) -> dict:
     try:
-        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    
+        return jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
     except ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expirado")
     except InvalidTokenError:

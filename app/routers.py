@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 from datetime import timedelta
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -8,13 +8,14 @@ from .models import Usuario
 from .schemas import (
     UsuarioSchema,
     UsuarioCreate,
-    LoginSchema
+    LoginSchema,
+    Token
 )
 from .auth import (
     hash_password,
     verify_password,
     create_access_token,
-    token_required,
+    decode_token,
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
 
@@ -64,6 +65,7 @@ def login(
 
 
     expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    print(expires)
     token = create_access_token(
         data={"email": usuario.email},
         expires_delta=expires
@@ -71,22 +73,24 @@ def login(
 
     return token
 
-@router.get("/", response_model=List[UsuarioSchema])
-@token_required
+@router.post("/", response_model=List[UsuarioSchema], status_code=201)
 def get_all_users(
+      token: Token, 
     db: Session = Depends(get_db)
 ):
-
+    payload = decode_token(token.token)
+    print(payload)
     return db.query(Usuario).all()
 
 
-@router.get("/{id}", response_model=UsuarioSchema)
-@token_required
+@router.post("/{id}", response_model=UsuarioSchema)
+
 def get_user_by_id(
-    id: int,
-    token_data: dict,            # ← payload del JWT también inyectado aquí
+    token: Token,
+    id: int,       
     db: Session = Depends(get_db)
 ):
+    payload = decode_token(token.token)
 
     usuario = db.query(Usuario).filter(Usuario.id == id).first()
     if not usuario:
